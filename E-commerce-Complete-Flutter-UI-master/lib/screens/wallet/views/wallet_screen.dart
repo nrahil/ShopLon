@@ -48,16 +48,16 @@ class WalletScreen extends StatelessWidget {
                       products: [
                         ProductModel(
                           image: productDemoImg1,
-                          title: "Mountain Warehouse for Women",
-                          brandName: "Lipsy london",
+                          title: "Arc Reactor Hoodie — Unisex",
+                          brandName: "Stark Apparel",
                           price: 540,
                           priceAfetDiscount: 420,
                           dicountpercent: 20,
                         ),
                         ProductModel(
                           image: productDemoImg4,
-                          title: "Mountain Beta Warehouse",
-                          brandName: "Lipsy london",
+                          title: "Vibranium Series Joggers",
+                          brandName: "Stark Active",
                           price: 800,
                         ),
                       ],

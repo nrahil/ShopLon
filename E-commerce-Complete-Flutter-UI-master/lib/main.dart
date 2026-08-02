@@ -7,8 +7,8 @@ void main() {
   runApp(const MyApp());
 }
 
-// Thanks for using our template. You are using the free version of the template.
-// 🔗 Full template: https://theflutterway.gumroad.com/l/fluttershop
+// ShopLon — E-Commerce App
+// © 2024 Stark Industries. All rights reserved.
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Shop Template by The Flutter Way',
+      title: 'ShopLon by Stark Industries',
       theme: AppTheme.lightTheme(context),
       // Dark theme is inclided in the Full template
       themeMode: ThemeMode.light,

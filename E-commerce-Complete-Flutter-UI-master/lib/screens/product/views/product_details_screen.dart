@@ -52,7 +52,10 @@ class ProductDetailsScreen extends StatelessWidget {
                 IconButton(
                   onPressed: () {},
                   icon: SvgPicture.asset("assets/icons/Bookmark.svg",
-                      color: Theme.of(context).textTheme.bodyLarge!.color),
+                    colorFilter: ColorFilter.mode(
+                      Theme.of(context).textTheme.bodyLarge!.color!,
+                      BlendMode.srcIn,
+                    )),
                 ),
               ],
             ),
@@ -60,8 +63,8 @@ class ProductDetailsScreen extends StatelessWidget {
               images: [productDemoImg1, productDemoImg2, productDemoImg3],
             ),
             ProductInfo(
-              brand: "LIPSY LONDON",
-              title: "Sleeveless Ruffle",
+              brand: "STARK INDUSTRIES",
+              title: "Arc Reactor Slim Blazer",
               isAvailable: isProductAvailable,
               description:
                   "A cool gray cap in soft corduroy. Watch me.' By buying cotton products from Lindex, you’re supporting more responsibly...",
@@ -148,8 +151,8 @@ class ProductDetailsScreen extends StatelessWidget {
                         right: index == 4 ? defaultPadding : 0),
                     child: ProductCard(
                       image: productDemoImg2,
-                      title: "Sleeveless Tiered Dobby Swing Dress",
-                      brandName: "LIPSY LONDON",
+                      title: "Arc Reactor Blazer",
+                      brandName: "STARK INDUSTRIES",
                       price: 24.65,
                       priceAfetDiscount: index.isEven ? 20.99 : null,
                       dicountpercent: index.isEven ? 25 : null,
