@@ -55,6 +55,7 @@ class ProductDetailsScreen extends StatelessWidget {
                 Consumer<WishlistProvider>(
                   builder: (context, wishlist, child) {
                     final dummyProduct = ProductModel(
+                      id: "dummy_1",
                       image: productDemoImg1,
                       title: "Arc Reactor Slim Blazer",
                       brandName: "STARK INDUSTRIES",
@@ -62,7 +63,7 @@ class ProductDetailsScreen extends StatelessWidget {
                       priceAfetDiscount: 134.7,
                       dicountpercent: 7,
                     );
-                    final isWishlisted = wishlist.isWishlisted(dummyProduct.title);
+                    final isWishlisted = wishlist.isWishlisted(dummyProduct.id);
                     return IconButton(
                       onPressed: () {
                         wishlist.toggle(dummyProduct);

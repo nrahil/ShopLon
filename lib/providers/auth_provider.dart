@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shop/models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -12,83 +11,104 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user');
-    if (userJson != null) {
-      _currentUser = UserModel.fromJson(json.decode(userJson));
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        _currentUser = UserModel(
+          name: user.displayName ?? user.email!.split('@').first,
+          email: user.email ?? '',
+          avatarUrl: user.photoURL ?? 'https://i.imgur.com/IXnO207.png',
+        );
+      } else {
+        _currentUser = null;
+      }
       notifyListeners();
-    }
+    });
   }
 
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
-    // Mock network delay
-    await Future.delayed(const Duration(seconds: 1));
-
-    _isLoading = false;
-    
-    // In Phase 1, any valid-looking request works, but check against demo if wanted.
-    // We'll let any reasonable credentials pass in mock mode.
-    if (email.isNotEmpty && password.length >= 6) {
-      _currentUser = UserModel(
-        name: email.split('@').first,
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
+        password: password,
       );
-      
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user', json.encode(_currentUser!.toJson()));
+      _isLoading = false;
       notifyListeners();
       return true;
+    } on FirebaseAuthException catch (e) {
+      debugPrint("Login error: ${e.message}");
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      debugPrint("Unknown error: $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
-    
-    notifyListeners();
-    return false;
   }
 
   Future<bool> signup(String name, String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
-    // Mock network delay
-    await Future.delayed(const Duration(seconds: 1));
-
-    _isLoading = false;
-    
-    if (name.isNotEmpty && email.isNotEmpty && password.length >= 6) {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      await userCredential.user?.updateDisplayName(name);
+      
+      // Update local state early for immediate UI response
       _currentUser = UserModel(
         name: name,
         email: email,
       );
       
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user', json.encode(_currentUser!.toJson()));
+      _isLoading = false;
       notifyListeners();
       return true;
+    } on FirebaseAuthException catch (e) {
+      debugPrint("Signup error: ${e.message}");
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      debugPrint("Unknown error: $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
-
-    notifyListeners();
-    return false;
   }
 
   Future<void> logout() async {
-    _currentUser = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user');
-    notifyListeners();
+    await FirebaseAuth.instance.signOut();
   }
   
   Future<void> updateProfile({required String name, required String email}) async {
-    if (_currentUser != null) {
-      _currentUser = UserModel(
-        name: name,
-        email: email,
-        avatarUrl: _currentUser!.avatarUrl,
-      );
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user', json.encode(_currentUser!.toJson()));
-      notifyListeners();
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        if (name != user.displayName) {
+          await user.updateDisplayName(name);
+        }
+        if (email != user.email) {
+          await user.verifyBeforeUpdateEmail(email);
+        }
+        
+        // Update local state
+        _currentUser = UserModel(
+          name: name,
+          email: email,
+          avatarUrl: _currentUser?.avatarUrl ?? 'https://i.imgur.com/IXnO207.png',
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Update profile error: $e");
     }
   }
 }

@@ -48,8 +48,8 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
         title: "Add to cart",
         subTitle: "Total price",
         press: () {
-          // Dummy product to add to cart
           final dummyProduct = ProductModel(
+            id: "dummy_buy_now",
             image: productDemoImg1,
             title: "Arc Reactor Slim Blazer",
             brandName: "STARK INDUSTRIES",
