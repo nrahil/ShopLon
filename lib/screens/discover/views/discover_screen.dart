@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
-import 'package:shop/models/category_model.dart';
+import 'package:provider/provider.dart';
+import 'package:shop/providers/category_provider.dart';
 import 'package:shop/screens/search/views/components/search_form.dart';
 
 import 'components/expansion_category.dart';
@@ -27,18 +28,27 @@ class DiscoverScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
-            // While loading use 👇
-            // const Expanded(
-            //   child: DiscoverCategoriesSkelton(),
-            // ),
             Expanded(
-              child: ListView.builder(
-                itemCount: demoCategories.length,
-                itemBuilder: (context, index) => ExpansionCategory(
-                  svgSrc: demoCategories[index].svgSrc!,
-                  title: demoCategories[index].title,
-                  subCategory: demoCategories[index].subCategories!,
-                ),
+              child: Consumer<CategoryProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (provider.categories.isEmpty) {
+                    return const Center(child: Text("No categories found"));
+                  }
+                  return ListView.builder(
+                    itemCount: provider.categories.length,
+                    itemBuilder: (context, index) {
+                      final category = provider.categories[index];
+                      return ExpansionCategory(
+                        svgSrc: category.svgSrc ?? "assets/icons/Category.svg",
+                        title: category.title,
+                        subCategory: category.subCategories ?? [],
+                      );
+                    },
+                  );
+                },
               ),
             )
           ],

@@ -50,7 +50,7 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
         press: () {
           final dummyProduct = ProductModel(
             id: "dummy_buy_now",
-            image: productDemoImg1,
+            image: "https://i.imgur.com/CGCyp1d.png",
             title: "Arc Reactor Slim Blazer",
             brandName: "STARK INDUSTRIES",
             price: 145,
@@ -106,7 +106,7 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                     padding: EdgeInsets.symmetric(horizontal: defaultPadding),
                     child: AspectRatio(
                       aspectRatio: 1.05,
-                      child: NetworkImageWithLoader(productDemoImg1),
+                      child: NetworkImageWithLoader("https://i.imgur.com/CGCyp1d.png"),
                     ),
                   ),
                 ),

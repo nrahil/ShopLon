@@ -56,7 +56,7 @@ class ProductDetailsScreen extends StatelessWidget {
                   builder: (context, wishlist, child) {
                     final dummyProduct = ProductModel(
                       id: "dummy_1",
-                      image: productDemoImg1,
+                      image: "https://i.imgur.com/CGCyp1d.png",
                       title: "Arc Reactor Slim Blazer",
                       brandName: "STARK INDUSTRIES",
                       price: 145,
@@ -81,7 +81,7 @@ class ProductDetailsScreen extends StatelessWidget {
               ],
             ),
             const ProductImages(
-              images: [productDemoImg1, productDemoImg2, productDemoImg3],
+              images: ["https://i.imgur.com/CGCyp1d.png", "https://i.imgur.com/AkzWQuJ.png", "https://i.imgur.com/J7mGZ12.png"],
             ),
             ProductInfo(
               brand: "STARK INDUSTRIES",
@@ -171,7 +171,7 @@ class ProductDetailsScreen extends StatelessWidget {
                         left: defaultPadding,
                         right: index == 4 ? defaultPadding : 0),
                     child: ProductCard(
-                      image: productDemoImg2,
+                      image: "https://i.imgur.com/AkzWQuJ.png",
                       title: "Arc Reactor Blazer",
                       brandName: "STARK INDUSTRIES",
                       price: 24.65,

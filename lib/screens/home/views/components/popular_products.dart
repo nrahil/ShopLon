@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shop/components/product/product_card.dart';
-import 'package:shop/models/product_model.dart';
 import 'package:shop/route/screen_export.dart';
+import 'package:provider/provider.dart';
+import 'package:shop/providers/product_provider.dart';
 
 import '../../../../constants.dart';
 
@@ -23,36 +24,46 @@ class PopularProducts extends StatelessWidget {
             style: Theme.of(context).textTheme.titleSmall,
           ),
         ),
-        // While loading use 👇
-        // const ProductsSkelton(),
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            // Find demoPopularProducts on models/ProductModel.dart
-            itemCount: demoPopularProducts.length,
-            itemBuilder: (context, index) => Padding(
-              padding: EdgeInsets.only(
-                left: defaultPadding,
-                right: index == demoPopularProducts.length - 1
-                    ? defaultPadding
-                    : 0,
-              ),
-              child: ProductCard(
-                image: demoPopularProducts[index].image,
-                brandName: demoPopularProducts[index].brandName,
-                title: demoPopularProducts[index].title,
-                price: demoPopularProducts[index].price,
-                priceAfetDiscount: demoPopularProducts[index].priceAfetDiscount,
-                dicountpercent: demoPopularProducts[index].dicountpercent,
-                press: () {
-                  Navigator.pushNamed(context, productDetailsScreenRoute,
-                      arguments: index.isEven);
+        Consumer<ProductProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (provider.popularProducts.isEmpty) {
+              return const Center(child: Text("No popular products found"));
+            }
+            return SizedBox(
+              height: 220,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: provider.popularProducts.length,
+                itemBuilder: (context, index) {
+                  final product = provider.popularProducts[index];
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      left: defaultPadding,
+                      right: index == provider.popularProducts.length - 1
+                          ? defaultPadding
+                          : 0,
+                    ),
+                    child: ProductCard(
+                      image: product.image,
+                      brandName: product.brandName,
+                      title: product.title,
+                      price: product.price,
+                      priceAfetDiscount: product.priceAfetDiscount,
+                      dicountpercent: product.dicountpercent,
+                      press: () {
+                        Navigator.pushNamed(context, productDetailsScreenRoute,
+                            arguments: index.isEven);
+                      },
+                    ),
+                  );
                 },
               ),
-            ),
-          ),
-        )
+            );
+          },
+        ),
       ],
     );
   }

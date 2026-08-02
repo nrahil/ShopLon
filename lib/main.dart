@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:shop/providers/auth_provider.dart';
 import 'package:shop/providers/cart_provider.dart';
 import 'package:shop/providers/wishlist_provider.dart';
+import 'package:shop/providers/product_provider.dart';
+import 'package:shop/providers/category_provider.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -26,6 +28,8 @@ void main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()..fetchProducts()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()..fetchCategories()),
       ],
       child: const MyApp(),
     ),

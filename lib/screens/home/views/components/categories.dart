@@ -1,33 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shop/route/screen_export.dart';
+import 'package:provider/provider.dart';
+import 'package:shop/providers/category_provider.dart';
 
 import '../../../../constants.dart';
-
-// For preview
-class CategoryModel {
-  final String name;
-  final String? svgSrc, route;
-
-  CategoryModel({
-    required this.name,
-    this.svgSrc,
-    this.route,
-  });
-}
-
-List<CategoryModel> demoCategories = [
-  CategoryModel(name: "All Categories"),
-  CategoryModel(
-      name: "On Sale",
-      svgSrc: "assets/icons/Sale.svg",
-      route: onSaleScreenRoute),
-  CategoryModel(name: "Man's", svgSrc: "assets/icons/Man.svg"),
-  CategoryModel(name: "Woman’s", svgSrc: "assets/icons/Woman.svg"),
-  CategoryModel(
-      name: "Kids", svgSrc: "assets/icons/Child.svg", route: kidsScreenRoute),
-];
-// End For Preview
 
 class Categories extends StatelessWidget {
   const Categories({
@@ -36,31 +12,45 @@ class Categories extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          ...List.generate(
-            demoCategories.length,
-            (index) => Padding(
-              padding: EdgeInsets.only(
-                  left: index == 0 ? defaultPadding : defaultPadding / 2,
-                  right:
-                      index == demoCategories.length - 1 ? defaultPadding : 0),
-              child: CategoryBtn(
-                category: demoCategories[index].name,
-                svgSrc: demoCategories[index].svgSrc,
-                isActive: index == 0,
-                press: () {
-                  if (demoCategories[index].route != null) {
-                    Navigator.pushNamed(context, demoCategories[index].route!);
-                  }
-                },
+    return Consumer<CategoryProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final cats = provider.categories;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: defaultPadding, right: defaultPadding / 2),
+                child: CategoryBtn(
+                  category: "All Categories",
+                  isActive: true,
+                  press: () {},
+                ),
               ),
-            ),
+              ...List.generate(
+                cats.length,
+                (index) => Padding(
+                  padding: EdgeInsets.only(
+                      left: defaultPadding / 2,
+                      right:
+                          index == cats.length - 1 ? defaultPadding : 0),
+                  child: CategoryBtn(
+                    category: cats[index].title,
+                    svgSrc: cats[index].svgSrc,
+                    isActive: false,
+                    press: () {
+                      // Navigate based on some route property or logic
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

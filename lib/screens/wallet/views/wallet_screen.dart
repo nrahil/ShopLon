@@ -48,7 +48,7 @@ class WalletScreen extends StatelessWidget {
                       products: [
                         ProductModel(
                           id: "dummy_wallet_1",
-                          image: productDemoImg1,
+                          image: "https://i.imgur.com/CGCyp1d.png",
                           title: "Arc Reactor Hoodie — Unisex",
                           brandName: "Stark Apparel",
                           price: 540,
@@ -57,7 +57,7 @@ class WalletScreen extends StatelessWidget {
                         ),
                         ProductModel(
                           id: "dummy_wallet_2",
-                          image: productDemoImg4,
+                          image: "https://i.imgur.com/q9oF9Yq.png",
                           title: "Vibranium Series Joggers",
                           brandName: "Stark Active",
                           price: 800,
