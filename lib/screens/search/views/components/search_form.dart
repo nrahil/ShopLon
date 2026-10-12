@@ -12,6 +12,7 @@ class SearchForm extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.onTabFilter,
+    this.onCameraTap,
     this.onFieldSubmitted,
     this.focusNode,
     this.autofocus = false,
@@ -22,12 +23,14 @@ class SearchForm extends StatelessWidget {
   final ValueChanged<String?>? onSaved, onChanged, onFieldSubmitted;
   final FormFieldValidator<String>? validator;
   final VoidCallback? onTabFilter;
+  final VoidCallback? onCameraTap;
   final FocusNode? focusNode;
   final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
     return Form(
+      key: formKey,
       child: TextFormField(
         autofocus: autofocus,
         focusNode: focusNode,
@@ -54,9 +57,21 @@ class SearchForm extends StatelessWidget {
             ),
           ),
           suffixIcon: SizedBox(
-            width: 40,
+            width: onCameraTap != null ? 80 : 40,
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                if (onCameraTap != null)
+                  Expanded(
+                    child: IconButton(
+                      onPressed: onCameraTap,
+                      icon: Icon(
+                        Icons.camera_alt_outlined, 
+                        color: Theme.of(context).iconTheme.color!.withValues(alpha: 0.5),
+                        size: 20,
+                      ),
+                    ),
+                  ),
                 const SizedBox(
                   height: 24,
                   child: VerticalDivider(width: 1),
