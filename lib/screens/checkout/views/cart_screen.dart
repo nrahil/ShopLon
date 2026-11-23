@@ -50,7 +50,8 @@ class CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: defaultPadding, vertical: defaultPadding / 2),
+      padding: const EdgeInsets.symmetric(
+          horizontal: defaultPadding, vertical: defaultPadding / 2),
       child: Container(
         padding: const EdgeInsets.all(defaultPadding / 2),
         decoration: BoxDecoration(
@@ -93,21 +94,28 @@ class CartItemCard extends StatelessWidget {
                     children: [
                       Text(
                         "\$${(item.product.priceAfetDiscount ?? item.product.price).toStringAsFixed(2)}",
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: primaryColor),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: primaryColor),
                       ),
                       Row(
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, size: 20),
+                            icon: const Icon(Icons.remove_circle_outline,
+                                size: 20),
                             onPressed: () {
-                              context.read<CartProvider>().updateQuantity(item, item.quantity - 1);
+                              context
+                                  .read<CartProvider>()
+                                  .updateQuantity(item, item.quantity - 1);
                             },
                           ),
                           Text("${item.quantity}"),
                           IconButton(
-                            icon: const Icon(Icons.add_circle_outline, size: 20),
+                            icon:
+                                const Icon(Icons.add_circle_outline, size: 20),
                             onPressed: () {
-                              context.read<CartProvider>().updateQuantity(item, item.quantity + 1);
+                              context
+                                  .read<CartProvider>()
+                                  .updateQuantity(item, item.quantity + 1);
                             },
                           ),
                         ],
@@ -208,7 +216,9 @@ class CartSummary extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Shipping"),
-                    Text("\$${cart.shippingTotal.toStringAsFixed(2)}"),
+                    Text(cart.shippingTotal == 0
+                        ? "Free"
+                        : "\$${cart.shippingTotal.toStringAsFixed(2)}"),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -223,28 +233,81 @@ class CartSummary extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Total", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    const Text("Total",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18)),
                     Text(
                       "\$${cart.totalPrice.toStringAsFixed(2)}",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: primaryColor),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: primaryColor),
                     ),
                   ],
                 ),
                 const SizedBox(height: defaultPadding),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, thanksForOrderScreenRoute);
-                    },
-                    child: const Text("Proceed to Checkout"),
+                if (cart.shippingTotal > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: defaultPadding / 2),
+                    child: Text(
+                      "Add \$${(CartProvider.freeShippingThreshold - cart.subtotal).toStringAsFixed(2)} more for free shipping",
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
+                const SizedBox(
+                  width: double.infinity,
+                  child: _CheckoutButton(),
                 ),
               ],
             );
           },
         ),
       ),
+    );
+  }
+}
+
+class _CheckoutButton extends StatefulWidget {
+  const _CheckoutButton();
+
+  @override
+  State<_CheckoutButton> createState() => _CheckoutButtonState();
+}
+
+class _CheckoutButtonState extends State<_CheckoutButton> {
+  bool _placing = false;
+
+  Future<void> _checkout() async {
+    setState(() => _placing = true);
+    try {
+      await context.read<CartProvider>().placeOrder();
+      if (!mounted) return;
+      Navigator.pushNamed(context, thanksForOrderScreenRoute);
+    } catch (e) {
+      debugPrint("Checkout error: $e");
+      if (!mounted) return;
+      final message = e is StateError
+          ? e.message
+          : "Couldn't place your order. Please try again.";
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _placing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: _placing ? null : _checkout,
+      child: _placing
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.white),
+            )
+          : const Text("Place order"),
     );
   }
 }

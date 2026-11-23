@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:shop/components/buy_full_ui_kit.dart';
+import 'package:shop/components/info_sheet.dart';
 import 'package:shop/components/cart_button.dart';
 import 'package:shop/components/custom_modal_bottom_sheet.dart';
 import 'package:shop/components/product/product_card.dart';
@@ -30,6 +30,11 @@ class ProductDetailsScreen extends StatelessWidget {
 
   final ProductModel product;
   final bool isProductAvailable;
+
+  bool get _available => isProductAvailable && product.isAvailable;
+
+  int _starCount(int stars) =>
+      product.reviews.where((r) => r.rating == stars).length;
 
   /// At or above this width the image and the details sit side by side.
   static const double _twoColumnBreakpoint = 840;
@@ -64,7 +69,7 @@ class ProductDetailsScreen extends StatelessWidget {
   }
 
   Widget _buyButton(BuildContext context) {
-    if (!isProductAvailable) {
+    if (!_available) {
       // If the product is not available, show [NotifyMeCard].
       return NotifyMeCard(isNotify: false, onChanged: (value) {});
     }
@@ -84,11 +89,12 @@ class ProductDetailsScreen extends StatelessWidget {
       ProductInfo(
         brand: product.brandName,
         title: product.title,
-        isAvailable: isProductAvailable,
-        description:
-            "${product.title} by ${product.brandName}. Crafted from quality materials for everyday comfort and style.",
-        rating: 4.4,
-        numOfReviews: 126,
+        isAvailable: _available,
+        description: product.description.isNotEmpty
+            ? product.description
+            : "${product.title} by ${product.brandName}.",
+        rating: product.rating,
+        numOfReviews: product.reviews.length,
       ),
       if (includeBuyButton) SliverToBoxAdapter(child: _buyButton(context)),
       ProductListTile(
@@ -96,7 +102,17 @@ class ProductDetailsScreen extends StatelessWidget {
         title: "Product Details",
         press: () => _openSheet(
           context,
-          const BuyFullKit(images: ["assets/screens/Product detail.png"]),
+          InfoSheet(title: "Product details", rows: {
+            "Brand": product.brandName,
+            if (product.category.isNotEmpty)
+              "Category": product.category.replaceAll('-', ' '),
+            "Price": "\$${product.effectivePrice.toStringAsFixed(2)}",
+            "In stock": _available ? "${product.stock} left" : "Out of stock",
+            if (product.warrantyInformation != null)
+              "Warranty": product.warrantyInformation!,
+            if (product.description.isNotEmpty)
+              "Description": product.description,
+          }),
         ),
       ),
       ProductListTile(
@@ -104,39 +120,52 @@ class ProductDetailsScreen extends StatelessWidget {
         title: "Shipping Information",
         press: () => _openSheet(
           context,
-          const BuyFullKit(
-            images: ["assets/screens/Shipping information.png"],
-          ),
+          InfoSheet(title: "Shipping information", rows: {
+            "Delivery":
+                product.shippingInformation ?? "Ships in 3-5 business days",
+            "Shipping cost": "Free on orders over \$100",
+          }),
         ),
       ),
       ProductListTile(
         svgSrc: "assets/icons/Return.svg",
         title: "Returns",
         isShowBottomBorder: true,
-        press: () => _openSheet(context, const ProductReturnsScreen()),
+        press: () => product.returnPolicy != null
+            ? _openSheet(
+                context,
+                InfoSheet(
+                  title: "Returns",
+                  rows: {"Return policy": product.returnPolicy!},
+                ),
+              )
+            : _openSheet(context, const ProductReturnsScreen()),
       ),
-      const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.all(defaultPadding),
-          child: ReviewCard(
-            rating: 4.3,
-            numOfReviews: 128,
-            numOfFiveStar: 80,
-            numOfFourStar: 30,
-            numOfThreeStar: 5,
-            numOfTwoStar: 4,
-            numOfOneStar: 1,
+      if (product.reviews.isNotEmpty) ...[
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(defaultPadding),
+            child: ReviewCard(
+              rating: product.rating,
+              numOfReviews: product.reviews.length,
+              numOfFiveStar: _starCount(5),
+              numOfFourStar: _starCount(4),
+              numOfThreeStar: _starCount(3),
+              numOfTwoStar: _starCount(2),
+              numOfOneStar: _starCount(1),
+            ),
           ),
         ),
-      ),
-      ProductListTile(
-        svgSrc: "assets/icons/Chat.svg",
-        title: "Reviews",
-        isShowBottomBorder: true,
-        press: () {
-          Navigator.pushNamed(context, productReviewsScreenRoute);
-        },
-      ),
+        ProductListTile(
+          svgSrc: "assets/icons/Chat.svg",
+          title: "Reviews",
+          isShowBottomBorder: true,
+          press: () {
+            Navigator.pushNamed(context, productReviewsScreenRoute,
+                arguments: product);
+          },
+        ),
+      ],
       if (relatedProducts.isNotEmpty) ...[
         SliverPadding(
           padding: const EdgeInsets.all(defaultPadding),
@@ -200,7 +229,7 @@ class ProductDetailsScreen extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final twoColumns = constraints.maxWidth >= _twoColumnBreakpoint;
-          final images = ProductImages(images: [product.image]);
+          final images = ProductImages(images: product.gallery);
 
           if (twoColumns) {
             return Scaffold(

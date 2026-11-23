@@ -29,20 +29,20 @@ class MostPopular extends StatelessWidget {
             if (provider.isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (provider.popularProducts.isEmpty) {
+            if (provider.mostPopular.isEmpty) {
               return const Center(child: Text("No products found"));
             }
             return SizedBox(
               height: 114,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: provider.popularProducts.length,
+                itemCount: provider.mostPopular.length,
                 itemBuilder: (context, index) {
-                  final product = provider.popularProducts[index];
+                  final product = provider.mostPopular[index];
                   return Padding(
                     padding: EdgeInsets.only(
                       left: defaultPadding,
-                      right: index == provider.popularProducts.length - 1
+                      right: index == provider.mostPopular.length - 1
                           ? defaultPadding
                           : 0,
                     ),

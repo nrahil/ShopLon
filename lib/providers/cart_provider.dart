@@ -28,7 +28,10 @@ class CartProvider extends ChangeNotifier {
   }
 
   CollectionReference<Map<String, dynamic>> get _cartRef =>
-      FirebaseFirestore.instance.collection('users').doc(_userId).collection('cart');
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .collection('cart');
 
   void _listenToCart() {
     if (_userId == null) return;
@@ -58,7 +61,11 @@ class CartProvider extends ChangeNotifier {
     return total;
   }
 
-  double get shippingTotal => 10.0;
+  /// Free shipping on orders of $100 or more.
+  static const double freeShippingThreshold = 100;
+
+  double get shippingTotal =>
+      _cartItems.isEmpty || subtotal >= freeShippingThreshold ? 0 : 10.0;
   double get taxTotal => subtotal * 0.08;
   double get totalPrice => subtotal + shippingTotal + taxTotal;
 
@@ -104,6 +111,37 @@ class CartProvider extends ChangeNotifier {
     } else {
       await _cartRef.doc(item.id).update({'quantity': newQuantity});
     }
+  }
+
+  /// Saves the cart as an order under users/{uid}/orders and empties the cart,
+  /// in a single atomic batch. Returns the new order id.
+  Future<String> placeOrder() async {
+    if (_userId == null) {
+      throw StateError("Please log in to place an order.");
+    }
+    if (_cartItems.isEmpty) {
+      throw StateError("Your cart is empty.");
+    }
+
+    final db = FirebaseFirestore.instance;
+    final orderRef =
+        db.collection('users').doc(_userId).collection('orders').doc();
+    final batch = db.batch();
+    batch.set(orderRef, {
+      'items': _cartItems.map((i) => i.toJson()).toList(),
+      'itemCount': _cartItems.fold<int>(0, (total, i) => total + i.quantity),
+      'subtotal': subtotal,
+      'shipping': shippingTotal,
+      'tax': taxTotal,
+      'total': totalPrice,
+      'status': 'Processing',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    for (final item in _cartItems) {
+      if (item.id != null) batch.delete(_cartRef.doc(item.id));
+    }
+    await batch.commit();
+    return orderRef.id;
   }
 
   Future<void> clearCart() async {

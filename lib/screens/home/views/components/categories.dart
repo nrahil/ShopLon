@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:shop/components/load_error.dart';
+import 'package:shop/route/route_constants.dart';
 import 'package:shop/providers/category_provider.dart';
 
 import '../../../../constants.dart';
@@ -17,17 +19,27 @@ class Categories extends StatelessWidget {
         if (provider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
+        if (provider.error != null && provider.categories.isEmpty) {
+          return LoadError(
+            message: provider.error!,
+            onRetry: provider.fetchCategories,
+            compact: true,
+          );
+        }
         final cats = provider.categories;
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: defaultPadding, right: defaultPadding / 2),
+                padding: const EdgeInsets.only(
+                    left: defaultPadding, right: defaultPadding / 2),
                 child: CategoryBtn(
                   category: "All Categories",
                   isActive: true,
-                  press: () {},
+                  press: () {
+                    Navigator.pushNamed(context, categoryProductsScreenRoute);
+                  },
                 ),
               ),
               ...List.generate(
@@ -35,14 +47,17 @@ class Categories extends StatelessWidget {
                 (index) => Padding(
                   padding: EdgeInsets.only(
                       left: defaultPadding / 2,
-                      right:
-                          index == cats.length - 1 ? defaultPadding : 0),
+                      right: index == cats.length - 1 ? defaultPadding : 0),
                   child: CategoryBtn(
                     category: cats[index].title,
                     svgSrc: cats[index].svgSrc,
                     isActive: false,
                     press: () {
-                      // Navigate based on some route property or logic
+                      Navigator.pushNamed(
+                        context,
+                        categoryProductsScreenRoute,
+                        arguments: cats[index],
+                      );
                     },
                   ),
                 ),

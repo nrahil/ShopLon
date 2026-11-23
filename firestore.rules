@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Legacy catalogue collections (the app now loads products from
+    // dummyjson.com, but keep these readable in case they're used again).
+    match /products/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Each user's cart and wishlist: only that user can read or change them.
+    match /users/{uid}/cart/{itemId} {
+      allow read, write: if isOwner(uid);
+    }
+    match /users/{uid}/wishlist/{itemId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Orders: the user can place and view their own orders,
+    // but can't edit or delete them afterwards.
+    match /users/{uid}/orders/{orderId} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.total is number
+        && request.resource.data.status == 'Processing';
+      allow update, delete: if false;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

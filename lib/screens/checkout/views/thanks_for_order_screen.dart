@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shop/constants.dart';
-import 'package:shop/providers/cart_provider.dart';
 import 'package:shop/route/route_constants.dart';
 
 class ThanksForOrderScreen extends StatefulWidget {
@@ -12,15 +10,6 @@ class ThanksForOrderScreen extends StatefulWidget {
 }
 
 class _ThanksForOrderScreenState extends State<ThanksForOrderScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Clear the cart when the thanks screen is shown
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CartProvider>().clearCart();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,6 +45,17 @@ class _ThanksForOrderScreenState extends State<ThanksForOrderScreen> {
                   );
                 },
                 child: const Text("Continue Shopping"),
+              ),
+              const SizedBox(height: defaultPadding / 2),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    ordersScreenRoute,
+                    (route) => route.isFirst,
+                  );
+                },
+                child: const Text("View my orders"),
               ),
             ],
           ),

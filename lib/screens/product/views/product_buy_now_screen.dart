@@ -40,9 +40,31 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
     Color(0xFF9FE1DD),
     Color(0xFFC482DB),
   ];
-  
+
   final List<String> _sizes = const ["S", "M", "L", "XL", "XXL"];
+  final List<String> _shoeSizes = const ["38", "39", "40", "41", "42", "43"];
   bool _isAdding = false;
+
+  static const _apparel = {
+    'tops',
+    'womens-dresses',
+    'mens-shirts',
+  };
+  static const _shoes = {'mens-shoes', 'womens-shoes'};
+
+  String get _category => widget.product.category;
+
+  /// Colour and size only make sense for clothing and shoes.
+  /// (Products saved before categories existed keep the old behaviour.)
+  bool get _hasVariants =>
+      _category.isEmpty ||
+      _apparel.contains(_category) ||
+      _shoes.contains(_category);
+
+  List<String> get _activeSizes =>
+      _shoes.contains(_category) ? _shoeSizes : _sizes;
+
+  int get _maxQuantity => widget.product.stock > 0 ? widget.product.stock : 1;
 
   /// Stores colors as "#AARRGGBB" so the cart can show a swatch.
   String _colorToHex(Color color) =>
@@ -55,8 +77,9 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
       await context.read<CartProvider>().addToCart(
             widget.product,
             quantity: _quantity,
-            color: _colorToHex(_colors[_selectedColorIndex]),
-            size: _sizes[_selectedSizeIndex],
+            color:
+                _hasVariants ? _colorToHex(_colors[_selectedColorIndex]) : null,
+            size: _hasVariants ? _activeSizes[_selectedSizeIndex] : null,
           );
       if (!mounted) return;
       customModalBottomSheet(
@@ -129,7 +152,8 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: defaultPadding),
                     child: AspectRatio(
                       aspectRatio: 1.05,
                       child: NetworkImageWithLoader(product.image),
@@ -151,6 +175,15 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                         ProductQuantity(
                           numOfItem: _quantity,
                           onIncrement: () {
+                            if (_quantity >= _maxQuantity) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text("Only $_maxQuantity left in stock."),
+                                ),
+                              );
+                              return;
+                            }
                             setState(() {
                               _quantity++;
                             });
@@ -168,43 +201,46 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                   ),
                 ),
                 const SliverToBoxAdapter(child: Divider()),
-                SliverToBoxAdapter(
-                  child: SelectedColors(
-                    colors: _colors,
-                    selectedColorIndex: _selectedColorIndex,
-                    press: (value) {
-                      setState(() {
-                        _selectedColorIndex = value;
-                      });
-                    },
+                if (_hasVariants) ...[
+                  SliverToBoxAdapter(
+                    child: SelectedColors(
+                      colors: _colors,
+                      selectedColorIndex: _selectedColorIndex,
+                      press: (value) {
+                        setState(() {
+                          _selectedColorIndex = value;
+                        });
+                      },
+                    ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: SelectedSize(
-                    sizes: _sizes,
-                    selectedIndex: _selectedSizeIndex,
-                    press: (value) {
-                      setState(() {
-                        _selectedSizeIndex = value;
-                      });
-                    },
+                  SliverToBoxAdapter(
+                    child: SelectedSize(
+                      sizes: _activeSizes,
+                      selectedIndex: _selectedSizeIndex,
+                      press: (value) {
+                        setState(() {
+                          _selectedSizeIndex = value;
+                        });
+                      },
+                    ),
                   ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(vertical: defaultPadding),
-                  sliver: ProductListTile(
-                    title: "Size guide",
-                    svgSrc: "assets/icons/Sizeguid.svg",
-                    isShowBottomBorder: true,
-                    press: () {
-                      customModalBottomSheet(
-                        context,
-                        height: MediaQuery.of(context).size.height * 0.9,
-                        child: const SizeGuideScreen(),
-                      );
-                    },
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: defaultPadding),
+                    sliver: ProductListTile(
+                      title: "Size guide",
+                      svgSrc: "assets/icons/Sizeguid.svg",
+                      isShowBottomBorder: true,
+                      press: () {
+                        customModalBottomSheet(
+                          context,
+                          height: MediaQuery.of(context).size.height * 0.9,
+                          child: const SizeGuideScreen(),
+                        );
+                      },
+                    ),
                   ),
-                ),
+                ],
                 SliverPadding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: defaultPadding),

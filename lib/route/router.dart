@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop/components/responsive.dart';
 import 'package:shop/entry_point.dart';
+import 'package:shop/models/category_model.dart';
 import 'package:shop/models/product_model.dart';
 
 import 'screen_export.dart';
@@ -148,11 +149,22 @@ Route<dynamic> generateRoute(RouteSettings settings) {
           return ProductDetailsScreen(product: product);
         },
       );
+    case categoryProductsScreenRoute:
+      return MaterialPageRoute(
+        builder: (context) => ResponsivePage(
+          maxWidth: Responsive.contentMaxWidth,
+          child: CategoryProductsScreen(
+            category: settings.arguments as CategoryModel?,
+          ),
+        ),
+      );
     case productReviewsScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const ResponsivePage(
+        builder: (context) => ResponsivePage(
           maxWidth: Responsive.readingMaxWidth,
-          child: ProductReviewsScreen(),
+          child: ProductReviewsScreen(
+            product: settings.arguments as ProductModel?,
+          ),
         ),
       );
     // case addReviewsScreenRoute:
