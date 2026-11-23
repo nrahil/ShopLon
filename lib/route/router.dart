@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shop/entry_point.dart';
+import 'package:shop/models/product_model.dart';
 
 import 'screen_export.dart';
 
@@ -130,8 +131,11 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case productDetailsScreenRoute:
       return MaterialPageRoute(
         builder: (context) {
-          bool isProductAvailable = settings.arguments as bool? ?? true;
-          return ProductDetailsScreen(isProductAvailable: isProductAvailable);
+          final product = settings.arguments;
+          if (product is! ProductModel) {
+            return const ComingSoonScreen();
+          }
+          return ProductDetailsScreen(product: product);
         },
       );
     case productReviewsScreenRoute:
@@ -300,8 +304,42 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
     default:
       return MaterialPageRoute(
-        // Make a screen for undefine
-        builder: (context) => const OnBordingScreen(),
+        builder: (context) => ComingSoonScreen(routeName: settings.name),
       );
+  }
+}
+
+/// Shown for routes whose screens are not part of this version of the app.
+class ComingSoonScreen extends StatelessWidget {
+  const ComingSoonScreen({super.key, this.routeName});
+
+  final String? routeName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.construction_outlined, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                "Coming soon",
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "This section isn't available yet.",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -9,6 +9,7 @@ import 'package:shop/screens/product/views/product_returns_screen.dart';
 
 import 'package:shop/route/screen_export.dart';
 import 'package:provider/provider.dart';
+import 'package:shop/providers/product_provider.dart';
 import 'package:shop/providers/wishlist_provider.dart';
 import 'package:shop/models/product_model.dart';
 
@@ -20,21 +21,33 @@ import '../../../components/review_card.dart';
 import 'product_buy_now_screen.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
-  const ProductDetailsScreen({super.key, this.isProductAvailable = true});
+  const ProductDetailsScreen({
+    super.key,
+    required this.product,
+    this.isProductAvailable = true,
+  });
 
+  final ProductModel product;
   final bool isProductAvailable;
 
   @override
   Widget build(BuildContext context) {
+    final relatedProducts = context
+        .watch<ProductProvider>()
+        .products
+        .where((p) => p.id != product.id)
+        .take(5)
+        .toList();
+
     return Scaffold(
       bottomNavigationBar: isProductAvailable
           ? CartButton(
-              price: 140,
+              price: product.effectivePrice,
               press: () {
                 customModalBottomSheet(
                   context,
                   height: MediaQuery.of(context).size.height * 0.92,
-                  child: const ProductBuyNowScreen(),
+                  child: ProductBuyNowScreen(product: product),
                 );
               },
             )
@@ -54,41 +67,35 @@ class ProductDetailsScreen extends StatelessWidget {
               actions: [
                 Consumer<WishlistProvider>(
                   builder: (context, wishlist, child) {
-                    final dummyProduct = ProductModel(
-                      id: "dummy_1",
-                      image: "https://i.imgur.com/CGCyp1d.png",
-                      title: "Arc Reactor Slim Blazer",
-                      brandName: "STARK INDUSTRIES",
-                      price: 145,
-                      priceAfetDiscount: 134.7,
-                      dicountpercent: 7,
-                    );
-                    final isWishlisted = wishlist.isWishlisted(dummyProduct.id);
+                    final isWishlisted = wishlist.isWishlisted(product.id);
                     return IconButton(
+                      tooltip: isWishlisted
+                          ? "Remove from wishlist"
+                          : "Add to wishlist",
                       onPressed: () {
-                        wishlist.toggle(dummyProduct);
+                        wishlist.toggle(product);
                       },
-                      icon: SvgPicture.asset(
-                        isWishlisted ? "assets/icons/Bookmark_filled.svg" : "assets/icons/Bookmark.svg",
-                        colorFilter: ColorFilter.mode(
-                          isWishlisted ? primaryColor : Theme.of(context).textTheme.bodyLarge!.color!,
-                          BlendMode.srcIn,
-                        ),
-                      ),
+                      icon: isWishlisted
+                          ? const Icon(Icons.bookmark, color: primaryColor)
+                          : SvgPicture.asset(
+                              "assets/icons/Bookmark.svg",
+                              colorFilter: ColorFilter.mode(
+                                Theme.of(context).textTheme.bodyLarge!.color!,
+                                BlendMode.srcIn,
+                              ),
+                            ),
                     );
                   },
                 ),
               ],
             ),
-            const ProductImages(
-              images: ["https://i.imgur.com/CGCyp1d.png", "https://i.imgur.com/AkzWQuJ.png", "https://i.imgur.com/J7mGZ12.png"],
-            ),
+            ProductImages(images: [product.image]),
             ProductInfo(
-              brand: "STARK INDUSTRIES",
-              title: "Arc Reactor Slim Blazer",
+              brand: product.brandName,
+              title: product.title,
               isAvailable: isProductAvailable,
               description:
-                  "A cool gray cap in soft corduroy. Watch me.' By buying cotton products from Lindex, you’re supporting more responsibly...",
+                  "${product.title} by ${product.brandName}. Crafted from quality materials for everyday comfort and style.",
               rating: 4.4,
               numOfReviews: 126,
             ),
@@ -165,21 +172,32 @@ class ProductDetailsScreen extends StatelessWidget {
                 height: 220,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: 5,
-                  itemBuilder: (context, index) => Padding(
-                    padding: EdgeInsets.only(
-                        left: defaultPadding,
-                        right: index == 4 ? defaultPadding : 0),
-                    child: ProductCard(
-                      image: "https://i.imgur.com/AkzWQuJ.png",
-                      title: "Arc Reactor Blazer",
-                      brandName: "STARK INDUSTRIES",
-                      price: 24.65,
-                      priceAfetDiscount: index.isEven ? 20.99 : null,
-                      dicountpercent: index.isEven ? 25 : null,
-                      press: () {},
-                    ),
-                  ),
+                  itemCount: relatedProducts.length,
+                  itemBuilder: (context, index) {
+                    final related = relatedProducts[index];
+                    return Padding(
+                      padding: EdgeInsets.only(
+                          left: defaultPadding,
+                          right: index == relatedProducts.length - 1
+                              ? defaultPadding
+                              : 0),
+                      child: ProductCard(
+                        image: related.image,
+                        title: related.title,
+                        brandName: related.brandName,
+                        price: related.price,
+                        priceAfetDiscount: related.priceAfetDiscount,
+                        dicountpercent: related.dicountpercent,
+                        press: () {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            productDetailsScreenRoute,
+                            arguments: related,
+                          );
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

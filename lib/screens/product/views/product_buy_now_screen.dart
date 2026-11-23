@@ -16,10 +16,13 @@ import 'components/unit_price.dart';
 
 import 'package:provider/provider.dart';
 import 'package:shop/providers/cart_provider.dart';
+import 'package:shop/providers/wishlist_provider.dart';
 import 'package:shop/models/product_model.dart';
 
 class ProductBuyNowScreen extends StatefulWidget {
-  const ProductBuyNowScreen({super.key});
+  const ProductBuyNowScreen({super.key, required this.product});
+
+  final ProductModel product;
 
   @override
   State<ProductBuyNowScreen> createState() => _ProductBuyNowScreenState();
@@ -39,38 +42,49 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
   ];
   
   final List<String> _sizes = const ["S", "M", "L", "XL", "XXL"];
+  bool _isAdding = false;
+
+  /// Stores colors as "#AARRGGBB" so the cart can show a swatch.
+  String _colorToHex(Color color) =>
+      '#${color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
+
+  Future<void> _addToCart() async {
+    if (_isAdding) return;
+    setState(() => _isAdding = true);
+    try {
+      await context.read<CartProvider>().addToCart(
+            widget.product,
+            quantity: _quantity,
+            color: _colorToHex(_colors[_selectedColorIndex]),
+            size: _sizes[_selectedSizeIndex],
+          );
+      if (!mounted) return;
+      customModalBottomSheet(
+        context,
+        isDismissible: false,
+        child: const AddedToCartMessageScreen(),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is StateError
+          ? e.message
+          : "Couldn't add to cart. Please try again.";
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _isAdding = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     return Scaffold(
       bottomNavigationBar: CartButton(
-        price: 134.7 * _quantity,
+        price: product.effectivePrice * _quantity,
         title: "Add to cart",
         subTitle: "Total price",
-        press: () {
-          final dummyProduct = ProductModel(
-            id: "dummy_buy_now",
-            image: "https://i.imgur.com/CGCyp1d.png",
-            title: "Arc Reactor Slim Blazer",
-            brandName: "STARK INDUSTRIES",
-            price: 145,
-            priceAfetDiscount: 134.7,
-            dicountpercent: 7,
-          );
-          
-          context.read<CartProvider>().addToCart(
-            dummyProduct,
-            quantity: _quantity,
-            color: _colors[_selectedColorIndex].toString(),
-            size: _sizes[_selectedSizeIndex],
-          );
-
-          customModalBottomSheet(
-            context,
-            isDismissible: false,
-            child: const AddedToCartMessageScreen(),
-          );
-        },
+        press: _addToCart,
       ),
       body: Column(
         children: [
@@ -81,19 +95,31 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const BackButton(),
-                Text(
-                  "Arc Reactor Slim Blazer",
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: SvgPicture.asset(
-                    "assets/icons/Bookmark.svg",
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).textTheme.bodyLarge!.color!,
-                      BlendMode.srcIn,
-                    ),
+                Expanded(
+                  child: Text(
+                    product.title,
+                    style: Theme.of(context).textTheme.titleSmall,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                Consumer<WishlistProvider>(
+                  builder: (context, wishlist, _) {
+                    final isWishlisted = wishlist.isWishlisted(product.id);
+                    return IconButton(
+                      onPressed: () => wishlist.toggle(product),
+                      icon: isWishlisted
+                          ? const Icon(Icons.bookmark, color: primaryColor)
+                          : SvgPicture.asset(
+                              "assets/icons/Bookmark.svg",
+                              colorFilter: ColorFilter.mode(
+                                Theme.of(context).textTheme.bodyLarge!.color!,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -101,12 +127,12 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
           Expanded(
             child: CustomScrollView(
               slivers: [
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: defaultPadding),
+                    padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
                     child: AspectRatio(
                       aspectRatio: 1.05,
-                      child: NetworkImageWithLoader("https://i.imgur.com/CGCyp1d.png"),
+                      child: NetworkImageWithLoader(product.image),
                     ),
                   ),
                 ),
@@ -116,10 +142,10 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: UnitPrice(
-                            price: 145,
-                            priceAfterDiscount: 134.7,
+                            price: product.price,
+                            priceAfterDiscount: product.priceAfetDiscount,
                           ),
                         ),
                         ProductQuantity(

@@ -17,29 +17,24 @@ class ProductModel {
     this.dicountpercent,
   });
 
+  /// Price the customer actually pays.
+  double get effectivePrice => priceAfetDiscount ?? price;
+
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
-      id: json['id'] ?? '',
-      image: json['image'] ?? '',
-      brandName: json['brandName'] ?? '',
-      title: json['title'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      priceAfetDiscount: json['priceAfetDiscount']?.toDouble(),
-      dicountpercent: json['dicountpercent'],
+      id: (json['id'] ?? '').toString(),
+      image: json['image'] as String? ?? '',
+      brandName: json['brandName'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0,
+      priceAfetDiscount: (json['priceAfetDiscount'] as num?)?.toDouble(),
+      dicountpercent: (json['dicountpercent'] as num?)?.toInt(),
     );
   }
 
   factory ProductModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return ProductModel(
-      id: doc.id,
-      image: data['image'] ?? '',
-      brandName: data['brandName'] ?? '',
-      title: data['title'] ?? '',
-      price: (data['price'] ?? 0).toDouble(),
-      priceAfetDiscount: data['priceAfetDiscount']?.toDouble(),
-      dicountpercent: data['dicountpercent'],
-    );
+    final data = Map<String, dynamic>.from(doc.data() as Map? ?? {});
+    return ProductModel.fromJson({...data, 'id': doc.id});
   }
 
   Map<String, dynamic> toJson() {

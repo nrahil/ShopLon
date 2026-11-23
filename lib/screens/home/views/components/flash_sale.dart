@@ -61,7 +61,7 @@ class FlashSale extends StatelessWidget {
                       dicountpercent: product.dicountpercent,
                       press: () {
                         Navigator.pushNamed(context, productDetailsScreenRoute,
-                            arguments: index.isEven);
+                            arguments: product);
                       },
                     ),
                   );

@@ -31,7 +31,11 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ProductProvider()..fetchProducts()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()..fetchCategories()),
       ],
-      child: const MyApp(),
+      child: MyApp(
+        initialRoute: authProvider.isLoggedIn
+            ? entryPointScreenRoute
+            : onbordingScreenRoute,
+      ),
     ),
   );
 }
@@ -40,7 +44,9 @@ void main() async {
 // © 2024 Stark Industries. All rights reserved.
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.initialRoute = onbordingScreenRoute});
+
+  final String initialRoute;
 
   // This widget is the root of your application.
   @override
@@ -52,7 +58,7 @@ class MyApp extends StatelessWidget {
       // Dark theme is inclided in the Full template
       themeMode: ThemeMode.light,
       onGenerateRoute: router.generateRoute,
-      initialRoute: onbordingScreenRoute,
+      initialRoute: initialRoute,
     );
   }
 }

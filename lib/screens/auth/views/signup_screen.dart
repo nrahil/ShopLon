@@ -125,7 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   );
                                 } else if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Signup failed.")),
+                                    SnackBar(content: Text(auth.lastError ?? "Something went wrong.")),
                                   );
                                 }
                               }

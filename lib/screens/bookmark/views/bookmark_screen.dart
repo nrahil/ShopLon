@@ -7,14 +7,15 @@ import 'package:shop/providers/wishlist_provider.dart';
 import '../../../constants.dart';
 
 class BookmarkScreen extends StatelessWidget {
-  const BookmarkScreen({super.key});
+  const BookmarkScreen({super.key, this.showAppBar = true});
+
+  /// False when shown as a tab inside [EntryPoint], which has its own AppBar.
+  final bool showAppBar;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Wishlist"),
-      ),
+      appBar: showAppBar ? AppBar(title: const Text("Wishlist")) : null,
       body: Consumer<WishlistProvider>(
         builder: (context, wishlist, child) {
           final items = wishlist.wishlistedItems;
@@ -45,7 +46,7 @@ class BookmarkScreen extends StatelessWidget {
                         priceAfetDiscount: items[index].priceAfetDiscount,
                         dicountpercent: items[index].dicountpercent,
                         press: () {
-                          Navigator.pushNamed(context, productDetailsScreenRoute);
+                          Navigator.pushNamed(context, productDetailsScreenRoute, arguments: items[index]);
                         },
                       );
                     },

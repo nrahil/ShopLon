@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shop/constants.dart';
@@ -72,11 +73,28 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                         setState(() {
                           _isLoading = true;
                         });
-                        await Future.delayed(const Duration(seconds: 1)); // Mock network
-                        if (context.mounted) {
-                          setState(() {
-                            _isLoading = false;
-                          });
+                        String? errorMessage;
+                        try {
+                          await FirebaseAuth.instance.sendPasswordResetEmail(
+                            email: _emailController.text.trim(),
+                          );
+                        } on FirebaseAuthException catch (e) {
+                          // Don't reveal whether an account exists.
+                          if (e.code != 'user-not-found') {
+                            errorMessage = e.message ?? "Could not send email.";
+                          }
+                        } catch (e) {
+                          errorMessage = "Could not send email. Try again.";
+                        }
+                        if (!context.mounted) return;
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        if (errorMessage != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(errorMessage)),
+                          );
+                        } else {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(

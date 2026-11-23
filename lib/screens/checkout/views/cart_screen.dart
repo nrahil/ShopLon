@@ -7,14 +7,15 @@ import 'package:shop/providers/cart_provider.dart';
 import 'package:shop/route/route_constants.dart';
 
 class CartScreen extends StatelessWidget {
-  const CartScreen({super.key});
+  const CartScreen({super.key, this.showAppBar = true});
+
+  /// False when shown as a tab inside [EntryPoint], which has its own AppBar.
+  final bool showAppBar;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Cart"),
-      ),
+      appBar: showAppBar ? AppBar(title: const Text("Cart")) : null,
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
           if (cart.cartItems.isEmpty) {
@@ -82,9 +83,9 @@ class CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   if (item.selectedSize != null || item.selectedColor != null)
-                    Text(
-                      "Size: ${item.selectedSize ?? 'N/A'}, Color: ${item.selectedColor ?? 'N/A'}",
-                      style: Theme.of(context).textTheme.bodySmall,
+                    _CartItemOptions(
+                      size: item.selectedSize,
+                      color: item.selectedColor,
                     ),
                   const SizedBox(height: 8),
                   Row(
@@ -119,6 +120,51 @@ class CartItemCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CartItemOptions extends StatelessWidget {
+  const _CartItemOptions({this.size, this.color});
+
+  final String? size;
+  final String? color;
+
+  /// Parses "#AARRGGBB" / "#RRGGBB". Returns null for anything else
+  /// (e.g. legacy "Color(...)" strings saved by older versions).
+  static Color? _parseHex(String? value) {
+    if (value == null || !value.startsWith('#')) return null;
+    var hex = value.substring(1);
+    if (hex.length == 6) hex = 'FF$hex';
+    if (hex.length != 8) return null;
+    final parsed = int.tryParse(hex, radix: 16);
+    return parsed == null ? null : Color(parsed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodySmall;
+    final swatch = _parseHex(color);
+    return Row(
+      children: [
+        Text("Size: ${size ?? 'N/A'}", style: style),
+        if (color != null) ...[
+          const SizedBox(width: 12),
+          Text("Color: ", style: style),
+          if (swatch != null)
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: swatch,
+                shape: BoxShape.circle,
+                border: Border.all(color: Theme.of(context).dividerColor),
+              ),
+            )
+          else
+            Text("—", style: style),
+        ],
+      ],
     );
   }
 }
