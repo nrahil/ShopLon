@@ -30,13 +30,18 @@ class SignUpForm extends StatelessWidget {
             decoration: InputDecoration(
               hintText: "Full Name",
               prefixIcon: Padding(
-                padding: const EdgeInsets.symmetric(vertical: defaultPadding * 0.75),
+                padding:
+                    const EdgeInsets.symmetric(vertical: defaultPadding * 0.75),
                 child: SvgPicture.asset(
                   "assets/icons/Profile.svg",
                   height: 24,
                   width: 24,
                   colorFilter: ColorFilter.mode(
-                    Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.3),
+                    Theme.of(context)
+                        .textTheme
+                        .bodyLarge!
+                        .color!
+                        .withValues(alpha: 0.3),
                     BlendMode.srcIn,
                   ),
                 ),

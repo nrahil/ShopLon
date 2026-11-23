@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shop/route/route_constants.dart';
 import 'package:shop/route/router.dart' as router;
 import 'package:shop/theme/app_theme.dart';
+import 'package:shop/components/responsive.dart';
 
 import 'package:provider/provider.dart';
 import 'package:shop/providers/auth_provider.dart';
@@ -53,6 +54,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AppScrollBehavior(),
       title: 'ShopLon by Stark Industries',
       theme: AppTheme.lightTheme(context),
       // Dark theme is inclided in the Full template

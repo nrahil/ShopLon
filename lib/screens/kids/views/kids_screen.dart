@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop/components/responsive.dart';
 import 'package:shop/components/product/product_card.dart';
 import 'package:provider/provider.dart';
 import 'package:shop/providers/product_provider.dart';
@@ -24,12 +25,7 @@ class KidsScreen extends StatelessWidget {
           }
           return GridView.builder(
             padding: const EdgeInsets.all(defaultPadding),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: defaultPadding,
-              mainAxisSpacing: defaultPadding,
-            ),
+            gridDelegate: productGridDelegate,
             itemCount: provider.kidsProducts.length,
             itemBuilder: (context, index) {
               final product = provider.kidsProducts[index];

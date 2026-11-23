@@ -15,16 +15,19 @@ class BannerM extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1.87,
-      child: GestureDetector(
-        onTap: press,
-        child: Stack(
-          children: [
-            NetworkImageWithLoader(image, radius: 0),
-            Container(color: Colors.black45),
-            ...children,
-          ],
+    return LayoutBuilder(
+      builder: (context, constraints) => AspectRatio(
+        // Wider and shorter on large screens so the banner doesn't fill the view.
+        aspectRatio: constraints.maxWidth >= 700 ? 3.2 : 1.87,
+        child: GestureDetector(
+          onTap: press,
+          child: Stack(
+            children: [
+              NetworkImageWithLoader(image, radius: 0),
+              Container(color: Colors.black45),
+              ...children,
+            ],
+          ),
         ),
       ),
     );

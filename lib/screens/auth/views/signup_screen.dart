@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'components/auth_layout.dart';
 import 'package:shop/screens/auth/views/components/sign_up_form.dart';
 import 'package:shop/route/route_constants.dart';
 
@@ -33,124 +34,119 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Image.asset(
-              "assets/images/signUp_dark.png",
-              height: MediaQuery.of(context).size.height * 0.35,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(defaultPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: AuthLayout(
+        image: "assets/images/signUp_dark.png",
+        mobileImageHeight: MediaQuery.sizeOf(context).height * 0.35,
+        child: Padding(
+          padding: const EdgeInsets.all(defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Let’s get started!",
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: defaultPadding / 2),
+              const Text(
+                "Please enter your valid data in order to create an account.",
+              ),
+              const SizedBox(height: defaultPadding),
+              SignUpForm(
+                formKey: _formKey,
+                nameController: _nameController,
+                emailController: _emailController,
+                passwordController: _passwordController,
+              ),
+              const SizedBox(height: defaultPadding),
+              Row(
                 children: [
-                  Text(
-                    "Let’s get started!",
-                    style: Theme.of(context).textTheme.headlineSmall,
+                  Checkbox(
+                    onChanged: (value) {
+                      setState(() {
+                        _agreedToTerms = value ?? false;
+                      });
+                    },
+                    value: _agreedToTerms,
                   ),
-                  const SizedBox(height: defaultPadding / 2),
-                  const Text(
-                    "Please enter your valid data in order to create an account.",
-                  ),
-                  const SizedBox(height: defaultPadding),
-                  SignUpForm(
-                    formKey: _formKey,
-                    nameController: _nameController,
-                    emailController: _emailController,
-                    passwordController: _passwordController,
-                  ),
-                  const SizedBox(height: defaultPadding),
-                  Row(
-                    children: [
-                      Checkbox(
-                        onChanged: (value) {
-                          setState(() {
-                            _agreedToTerms = value ?? false;
-                          });
-                        },
-                        value: _agreedToTerms,
-                      ),
-                      Expanded(
-                        child: Text.rich(
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        text: "I agree with the",
+                        children: [
                           TextSpan(
-                            text: "I agree with the",
-                            children: [
-                              TextSpan(
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    Navigator.pushNamed(
-                                        context, termsOfServicesScreenRoute);
-                                  },
-                                text: " Terms of service ",
-                                style: const TextStyle(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const TextSpan(
-                                text: "& privacy policy.",
-                              ),
-                            ],
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.pushNamed(
+                                    context, termsOfServicesScreenRoute);
+                              },
+                            text: " Terms of service ",
+                            style: const TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: defaultPadding * 2),
-                  Consumer<AuthProvider>(
-                    builder: (context, auth, _) => ElevatedButton(
-                      onPressed: auth.isLoading
-                          ? null
-                          : () async {
-                              if (_formKey.currentState!.validate()) {
-                                if (!_agreedToTerms) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("You must agree to terms")),
-                                  );
-                                  return;
-                                }
-                                bool success = await auth.signup(
-                                  _nameController.text,
-                                  _emailController.text,
-                                  _passwordController.text,
-                                );
-                                if (success && context.mounted) {
-                                  Navigator.pushNamedAndRemoveUntil(
-                                    context,
-                                    entryPointScreenRoute,
-                                    (route) => false,
-                                  );
-                                } else if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(auth.lastError ?? "Something went wrong.")),
-                                  );
-                                }
-                              }
-                            },
-                      child: auth.isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("Continue"),
+                          const TextSpan(
+                            text: "& privacy policy.",
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Do you have an account?"),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, logInScreenRoute);
-                        },
-                        child: const Text("Log in"),
-                      )
-                    ],
-                  ),
+                  )
                 ],
               ),
-            )
-          ],
+              const SizedBox(height: defaultPadding * 2),
+              Consumer<AuthProvider>(
+                builder: (context, auth, _) => ElevatedButton(
+                  onPressed: auth.isLoading
+                      ? null
+                      : () async {
+                          if (_formKey.currentState!.validate()) {
+                            if (!_agreedToTerms) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text("You must agree to terms")),
+                              );
+                              return;
+                            }
+                            bool success = await auth.signup(
+                              _nameController.text,
+                              _emailController.text,
+                              _passwordController.text,
+                            );
+                            if (success && context.mounted) {
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                entryPointScreenRoute,
+                                (route) => false,
+                              );
+                            } else if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(auth.lastError ??
+                                        "Something went wrong.")),
+                              );
+                            }
+                          }
+                        },
+                  child: auth.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Continue"),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Do you have an account?"),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, logInScreenRoute);
+                    },
+                    child: const Text("Log in"),
+                  )
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

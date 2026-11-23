@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop/components/responsive.dart';
 import 'package:shop/entry_point.dart';
 import 'package:shop/models/product_model.dart';
 
@@ -66,7 +67,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
     case onbordingScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const OnBordingScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.formMaxWidth,
+          child: OnBordingScreen(),
+        ),
       );
     // case preferredLanuageScreenRoute:
     //   return MaterialPageRoute(
@@ -86,7 +90,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case passwordRecoveryScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const PasswordRecoveryScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.formMaxWidth,
+          child: PasswordRecoveryScreen(),
+        ),
       );
     // case verificationMethodScreenRoute:
     //   return MaterialPageRoute(
@@ -106,7 +113,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case termsOfServicesScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const TermsOfServicesScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: TermsOfServicesScreen(),
+        ),
       );
     // case noInternetScreenRoute:
     //   return MaterialPageRoute(
@@ -140,7 +150,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
     case productReviewsScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const ProductReviewsScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: ProductReviewsScreen(),
+        ),
       );
     // case addReviewsScreenRoute:
     //   return MaterialPageRoute(
@@ -148,7 +161,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case homeScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.contentMaxWidth,
+          child: HomeScreen(),
+        ),
       );
     // case brandScreenRoute:
     //   return MaterialPageRoute(
@@ -164,19 +180,31 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case discoverScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const DiscoverScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: DiscoverScreen(),
+        ),
       );
     case onSaleScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const OnSaleScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.contentMaxWidth,
+          child: OnSaleScreen(),
+        ),
       );
     case kidsScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const KidsScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.contentMaxWidth,
+          child: KidsScreen(),
+        ),
       );
     case searchScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const SearchScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.contentMaxWidth,
+          child: SearchScreen(),
+        ),
       );
     // case searchHistoryScreenRoute:
     //   return MaterialPageRoute(
@@ -184,7 +212,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case bookmarkScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const BookmarkScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.contentMaxWidth,
+          child: BookmarkScreen(),
+        ),
       );
     case entryPointScreenRoute:
       return MaterialPageRoute(
@@ -192,7 +223,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
     case profileScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const ProfileScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: ProfileScreen(),
+        ),
       );
     // case getHelpScreenRoute:
     //   return MaterialPageRoute(
@@ -204,7 +238,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case userInfoScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const UserInfoScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.formMaxWidth,
+          child: UserInfoScreen(),
+        ),
       );
     // case currentPasswordScreenRoute:
     //   return MaterialPageRoute(
@@ -216,19 +253,31 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case notificationsScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const NotificationsScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: NotificationsScreen(),
+        ),
       );
     case noNotificationScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const NoNotificationScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: NoNotificationScreen(),
+        ),
       );
     case enableNotificationScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const EnableNotificationScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: EnableNotificationScreen(),
+        ),
       );
     case notificationOptionsScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const NotificationOptionsScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: NotificationOptionsScreen(),
+        ),
       );
     // case selectLanguageScreenRoute:
     //   return MaterialPageRoute(
@@ -240,7 +289,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case addressesScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const AddressesScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: AddressesScreen(),
+        ),
       );
     // case addNewAddressesScreenRoute:
     //   return MaterialPageRoute(
@@ -248,7 +300,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case ordersScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const OrdersScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: OrdersScreen(),
+        ),
       );
     // case orderProcessingScreenRoute:
     //   return MaterialPageRoute(
@@ -272,7 +327,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case preferencesScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const PreferencesScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: PreferencesScreen(),
+        ),
       );
     // case emptyPaymentScreenRoute:
     //   return MaterialPageRoute(
@@ -280,15 +338,24 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case emptyWalletScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const EmptyWalletScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: EmptyWalletScreen(),
+        ),
       );
     case walletScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const WalletScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: WalletScreen(),
+        ),
       );
     case cartScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const CartScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.readingMaxWidth,
+          child: CartScreen(),
+        ),
       );
     // case paymentMethodScreenRoute:
     //   return MaterialPageRoute(
@@ -300,7 +367,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   );
     case thanksForOrderScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const ThanksForOrderScreen(),
+        builder: (context) => const ResponsivePage(
+          maxWidth: Responsive.formMaxWidth,
+          child: ThanksForOrderScreen(),
+        ),
       );
     default:
       return MaterialPageRoute(

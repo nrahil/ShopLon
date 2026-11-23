@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:shop/components/responsive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shop/components/product/product_card.dart';
 import 'package:shop/constants.dart';
@@ -190,12 +191,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             : GridView.builder(
                                 itemCount: displayProducts.length,
                                 gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.7,
-                                  crossAxisSpacing: defaultPadding,
-                                  mainAxisSpacing: defaultPadding,
-                                ),
+                                    productGridDelegate,
                                 itemBuilder: (context, index) {
                                   final product = displayProducts[index];
                                   return ProductCard(

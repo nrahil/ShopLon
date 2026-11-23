@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop/components/responsive.dart';
 import 'package:shop/components/product/product_card.dart';
 import 'package:shop/route/route_constants.dart';
 
@@ -30,12 +31,7 @@ class BookmarkScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: defaultPadding, vertical: defaultPadding),
                 sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200.0,
-                    mainAxisSpacing: defaultPadding,
-                    crossAxisSpacing: defaultPadding,
-                    childAspectRatio: 0.66,
-                  ),
+                  gridDelegate: productGridDelegate,
                   delegate: SliverChildBuilderDelegate(
                     (BuildContext context, int index) {
                       return ProductCard(
