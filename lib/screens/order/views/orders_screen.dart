@@ -5,9 +5,23 @@ import 'package:shop/constants.dart';
 import 'package:shop/models/order_model.dart';
 import 'package:shop/providers/order_provider.dart';
 import 'package:shop/route/route_constants.dart';
+import 'package:shop/services/api_client.dart';
 
-class OrdersScreen extends StatelessWidget {
+class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
+
+  @override
+  State<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Statuses change in the background (webhooks, expiry, shipping), so refresh on open.
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => context.read<OrderProvider>().fetchOrders());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,11 +29,19 @@ class OrdersScreen extends StatelessWidget {
       appBar: AppBar(title: const Text("Orders")),
       body: Consumer<OrderProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading) {
+          if (provider.isLoading && provider.orders.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (provider.error != null) {
-            return Center(child: Text(provider.error!));
+          if (provider.error != null && provider.orders.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(provider.error!),
+                  TextButton(onPressed: provider.fetchOrders, child: const Text("Retry")),
+                ],
+              ),
+            );
           }
           if (provider.orders.isEmpty) {
             return Center(
@@ -43,11 +65,14 @@ class OrdersScreen extends StatelessWidget {
               ),
             );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.all(defaultPadding),
-            itemCount: provider.orders.length,
-            itemBuilder: (context, index) =>
-                _OrderCard(order: provider.orders[index]),
+          return RefreshIndicator(
+            onRefresh: provider.fetchOrders,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(defaultPadding),
+              itemCount: provider.orders.length,
+              itemBuilder: (context, index) =>
+                  _OrderCard(order: provider.orders[index]),
+            ),
           );
         },
       ),
@@ -63,21 +88,29 @@ class _OrderCard extends StatelessWidget {
   static String _formatDate(DateTime? date) {
     if (date == null) return 'Just now';
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     final local = date.toLocal();
     return '${months[local.month - 1]} ${local.day}, ${local.year}';
+  }
+
+  Color get _statusColor => switch (order.status) {
+        'PAID' || 'SHIPPED' => successColor,
+        'PENDING_PAYMENT' || 'REFUND_PENDING' => warningColor,
+        'CANCELLED' || 'EXPIRED' => errorColor,
+        _ => greyColor,
+      };
+
+  Future<void> _cancel(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await context.read<OrderProvider>().cancel(order.id);
+      messenger.showSnackBar(const SnackBar(
+          content: Text("Order cancelled. Reserved items were released.")));
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   @override
@@ -111,10 +144,11 @@ class _OrderCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: warningColor.withValues(alpha: 0.15),
+                  color: _statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(order.status, style: const TextStyle(fontSize: 11)),
+                child: Text(order.statusLabel,
+                    style: const TextStyle(fontSize: 11)),
               ),
             ],
           ),
@@ -149,6 +183,34 @@ class _OrderCard extends StatelessWidget {
             _row("Subtotal", order.subtotal),
             _row("Shipping", order.shipping),
             _row("Tax", order.tax),
+            if (order.payment?.status == 'FAILED' && order.isAwaitingPayment)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(order.payment!.failureMessage,
+                    style: const TextStyle(color: errorColor, fontSize: 12)),
+              ),
+            if (order.isAwaitingPayment) ...[
+              const SizedBox(height: defaultPadding / 2),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _cancel(context),
+                      child: const Text("Cancel"),
+                    ),
+                  ),
+                  const SizedBox(width: defaultPadding / 2),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pushNamed(
+                          context, checkoutPaymentScreenRoute,
+                          arguments: order),
+                      child: const Text("Pay now"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

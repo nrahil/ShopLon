@@ -108,7 +108,40 @@ class ProductModel {
     );
   }
 
-  /// Builds a product saved in Firestore (cart, wishlist, orders).
+  /// Builds a product from the ShopLon API. Money arrives as integer cents,
+  /// and the sale price is computed by the server, not here.
+  factory ProductModel.fromBackend(Map<String, dynamic> json) {
+    final priceCents = (json['priceCents'] as num?)?.toInt() ?? 0;
+    final saleCents = (json['salePriceCents'] as num?)?.toInt() ?? priceCents;
+    final discount = (json['discountPercent'] as num?)?.toInt() ?? 0;
+    final category = json['category'] as String? ?? '';
+    final hasDiscount = discount >= 1 && saleCents < priceCents;
+    return ProductModel(
+      id: json['id'] as String? ?? '',
+      image: json['thumbnail'] as String? ?? '',
+      brandName: (json['brand'] as String?) ??
+          _titleCase(category.isEmpty ? 'ShopLon' : category),
+      title: json['title'] as String? ?? '',
+      price: priceCents / 100,
+      priceAfetDiscount: hasDiscount ? saleCents / 100 : null,
+      dicountpercent: hasDiscount ? discount : null,
+      description: json['description'] as String? ?? '',
+      category: category,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0,
+      stock: (json['stock'] as num?)?.toInt() ?? 0,
+      images: (json['images'] as List?)?.whereType<String>().toList() ?? [],
+      reviews: (json['reviews'] as List?)
+              ?.whereType<Map>()
+              .map((r) => ReviewModel.fromJson(Map<String, dynamic>.from(r)))
+              .toList() ??
+          const [],
+      shippingInformation: json['shippingInformation'] as String?,
+      warrantyInformation: json['warrantyInformation'] as String?,
+      returnPolicy: json['returnPolicy'] as String?,
+    );
+  }
+
+  /// Builds a product saved in Firestore (wishlist).
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       id: (json['id'] ?? '').toString(),

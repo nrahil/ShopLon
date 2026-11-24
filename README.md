@@ -1,55 +1,51 @@
-# E-Commerce Application
+# ShopLon
 
-A cross-platform e-commerce application built with Flutter.
+A full-stack e-commerce system: a responsive Flutter app (web, Android and iOS) on top of a horizontally
+scalable TypeScript backend. It's built to show the hard parts done correctly: concurrent stock reservation,
+high-write carts, idempotent checkout, payments that survive an unreliable provider, and secure sessions.
 
-## Overview
+**Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design, the trade-offs and the measured results.**
 
-This project is a complete Flutter e-commerce UI ready to be integrated with a backend (e.g., Firebase, REST API). It includes comprehensive screens for:
-- User Authentication (Login, Sign up, Forgot password)
-- Product browsing and searching
-- Shopping Cart and Checkout flows
-- User Profile and Order History
+```
+Flutter app ──► nginx ──► API × N (Fastify, stateless) ──► Postgres (source of truth)
+     │                          │                    └──► Redis (carts, cache, rate limits, sessions)
+     │                          └──► Payment provider (mock PSP or Stripe) ──signed webhooks──┐
+     └── card details go straight to the PSP, never to our API                               │
+                                 Worker (write-behind, outbox, expiry, reconciliation) ◄──────┘
+```
 
-## Getting Started
+## Highlights
 
-To get a local copy up and running, follow these simple steps.
+- **No overselling under load**: 500 simultaneous buyers for 25 units produce exactly 25 paid orders
+  (`npm run load:flash-sale`). Row locks are taken in a deterministic order, with a DB constraint as backstop.
+- **Idempotent checkout and payments**: double taps and network retries never create a second order or charge.
+- **High-write cart**: atomic Redis Lua scripts, written behind to Postgres in coalesced, version-guarded batches.
+- **Payment correctness**: signed and de-duplicated webhooks, an order state machine, reconciliation for lost
+  webhooks, and automatic refunds for late or duplicate payments.
+- **Security**: Firebase JWTs verified against Google's keys, server-side session revocation, per-user rate
+  limits shared across replicas, PCI-scope reduction, validated input, and locked-down Firestore rules.
+- **Operations**: transactional outbox, health and readiness probes, Prometheus metrics, request ids,
+  graceful shutdown, and single-run migrations.
+- 30 backend tests (unit + integration against real Postgres/Redis) and 18 Flutter tests.
 
-### Prerequisites
+## Run it
 
-- Flutter SDK
-- Dart SDK
-- Android Studio / VS Code (with Flutter extensions)
+```bash
+# 1. Backend: Postgres, Redis, 2 API replicas, worker, mock PSP, nginx
+cd backend && cp .env.example .env && docker compose up -d --build
 
-### Installation
+# 2. App
+cd .. && flutter pub get && flutter run -d chrome --web-port 5000
+```
 
-1. Clone the repo
-   ```sh
-   git clone <your_new_repository_url>
-   ```
-2. Install dependencies
-   ```sh
-   flutter pub get
-   ```
-3. Run the application
-   ```sh
-   flutter run
-   ```
+Sign up in the app, add items, check out, and pay with test card `4242 4242 4242 4242`.
+Other test cards simulate declines, duplicate webhooks and lost webhooks (see [`backend/README.md`](backend/README.md)).
 
-## Project Structure
+## Repository
 
-- `lib/`: Contains the Dart source code.
-  - `screens/`: UI pages for the application.
-  - `components/`: Reusable UI widgets.
-  - `models/`: Data models.
-  - `theme/`: App styling and theme configurations.
-- `assets/`: Images, icons, and fonts used in the app.
-
-## Backend Integration (Upcoming)
-
-This project is currently being prepared for backend integration, specifically:
-- Firebase Authentication
-- Payment Gateway integration
-
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+| Path | |
+|---|---|
+| `lib/` | Flutter app (Provider state management, responsive layouts, API client with token refresh, retries and idempotency) |
+| `backend/` | API, worker, mock PSP, migrations, tests, load test, Docker Compose |
+| `docs/ARCHITECTURE.md` | Design write-up with diagrams |
+| `firestore.rules` | Firestore holds only wishlists; everything else is closed to clients |

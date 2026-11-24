@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shop/models/user_model.dart';
+import 'package:shop/services/api_client.dart';
 
 class AuthProvider extends ChangeNotifier {
   static const String _defaultAvatar = 'https://i.imgur.com/IXnO207.png';
@@ -124,7 +125,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Revokes the session on the server first (so a copied token stops working
+  /// immediately, on every device), then signs out locally. If the server is
+  /// unreachable, the local sign-out still happens.
   Future<void> logout() async {
+    try {
+      await ApiClient.instance
+          .post('/v1/auth/logout')
+          .timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint("Server logout failed (signing out locally anyway): $e");
+    }
     await FirebaseAuth.instance.signOut();
   }
 

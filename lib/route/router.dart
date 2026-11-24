@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shop/components/responsive.dart';
 import 'package:shop/entry_point.dart';
 import 'package:shop/models/category_model.dart';
+import 'package:shop/models/order_model.dart';
 import 'package:shop/models/product_model.dart';
 
 import 'screen_export.dart';
@@ -377,6 +378,14 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   return MaterialPageRoute(
     //     builder: (context) => const AddNewCardScreen(),
     //   );
+    case checkoutPaymentScreenRoute:
+      final order = settings.arguments as OrderModel;
+      return MaterialPageRoute(
+        builder: (context) => ResponsivePage(
+          maxWidth: Responsive.formMaxWidth,
+          child: PaymentScreen(order: order),
+        ),
+      );
     case thanksForOrderScreenRoute:
       return MaterialPageRoute(
         builder: (context) => const ResponsivePage(

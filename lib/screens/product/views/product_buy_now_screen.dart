@@ -15,6 +15,7 @@ import 'components/selected_size.dart';
 import 'components/unit_price.dart';
 
 import 'package:provider/provider.dart';
+import 'package:shop/services/api_client.dart';
 import 'package:shop/providers/cart_provider.dart';
 import 'package:shop/providers/wishlist_provider.dart';
 import 'package:shop/models/product_model.dart';
@@ -91,7 +92,9 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
       if (!mounted) return;
       final message = e is StateError
           ? e.message
-          : "Couldn't add to cart. Please try again.";
+          : e is ApiException
+              ? e.message
+              : "Couldn't add to cart. Please try again.";
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
     } finally {

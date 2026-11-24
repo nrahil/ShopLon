@@ -5,6 +5,7 @@ import 'package:shop/constants.dart';
 import 'package:shop/models/cart_item_model.dart';
 import 'package:shop/providers/cart_provider.dart';
 import 'package:shop/route/route_constants.dart';
+import 'package:shop/services/api_client.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key, this.showAppBar = true});
@@ -19,8 +20,11 @@ class CartScreen extends StatelessWidget {
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
           if (cart.cartItems.isEmpty) {
-            return const Center(
-              child: Text("Your cart is empty"),
+            if (cart.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return Center(
+              child: Text(cart.error ?? "Your cart is empty"),
             );
           }
           return Column(
@@ -102,21 +106,15 @@ class CartItemCard extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline,
                                 size: 20),
-                            onPressed: () {
-                              context
-                                  .read<CartProvider>()
-                                  .updateQuantity(item, item.quantity - 1);
-                            },
+                            onPressed: () => _changeQuantity(
+                                context, item, item.quantity - 1),
                           ),
                           Text("${item.quantity}"),
                           IconButton(
                             icon:
                                 const Icon(Icons.add_circle_outline, size: 20),
-                            onPressed: () {
-                              context
-                                  .read<CartProvider>()
-                                  .updateQuantity(item, item.quantity + 1);
-                            },
+                            onPressed: () => _changeQuantity(
+                                context, item, item.quantity + 1),
                           ),
                         ],
                       ),
@@ -130,6 +128,17 @@ class CartItemCard extends StatelessWidget {
       ),
     );
   }
+}
+
+void _changeQuantity(BuildContext context, CartItemModel item, int quantity) {
+  final messenger = ScaffoldMessenger.of(context);
+  context
+      .read<CartProvider>()
+      .updateQuantity(item, quantity)
+      .catchError((Object e) {
+    messenger.showSnackBar(SnackBar(
+        content: Text(e is ApiException ? e.message : "Couldn't update cart")));
+  });
 }
 
 class _CartItemOptions extends StatelessWidget {
@@ -280,15 +289,18 @@ class _CheckoutButtonState extends State<_CheckoutButton> {
   Future<void> _checkout() async {
     setState(() => _placing = true);
     try {
-      await context.read<CartProvider>().placeOrder();
+      final order = await context.read<CartProvider>().checkout();
       if (!mounted) return;
-      Navigator.pushNamed(context, thanksForOrderScreenRoute);
+      Navigator.pushNamed(context, checkoutPaymentScreenRoute,
+          arguments: order);
     } catch (e) {
       debugPrint("Checkout error: $e");
       if (!mounted) return;
       final message = e is StateError
           ? e.message
-          : "Couldn't place your order. Please try again.";
+          : e is ApiException
+              ? e.message
+              : "Couldn't place your order. Please try again.";
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
     } finally {
@@ -307,7 +319,7 @@ class _CheckoutButtonState extends State<_CheckoutButton> {
               child: CircularProgressIndicator(
                   strokeWidth: 2, color: Colors.white),
             )
-          : const Text("Place order"),
+          : const Text("Checkout"),
     );
   }
 }

@@ -1,10 +1,8 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
 import 'package:shop/models/category_model.dart';
 import 'package:shop/models/product_model.dart';
+import 'package:shop/services/api_client.dart';
 
-/// Thrown when the product API can't be reached or returns bad data.
+/// Thrown when the catalogue can't be loaded.
 class ProductApiException implements Exception {
   ProductApiException(this.message);
   final String message;
@@ -13,55 +11,50 @@ class ProductApiException implements Exception {
   String toString() => message;
 }
 
-/// Public product catalogue from DummyJSON (https://dummyjson.com).
-/// Free, no API key required, and CORS-enabled so it works on web.
+/// Catalogue endpoints of the ShopLon API (public, cached and paginated).
 class ProductApi {
-  ProductApi({http.Client? client}) : _client = client ?? http.Client();
+  ProductApi({ApiClient? client}) : _api = client ?? ApiClient.instance;
 
-  static const String _baseUrl = 'https://dummyjson.com';
-  static const Duration _timeout = Duration(seconds: 20);
+  final ApiClient _api;
 
-  final http.Client _client;
-
-  Future<dynamic> _get(String path) async {
-    final http.Response response;
+  /// Follows the keyset-pagination cursor until the whole catalogue is loaded.
+  Future<List<ProductModel>> fetchProducts({String? category}) async {
+    final products = <ProductModel>[];
+    String? cursor;
     try {
-      response =
-          await _client.get(Uri.parse('$_baseUrl$path')).timeout(_timeout);
-    } catch (e) {
-      throw ProductApiException(
-          "Couldn't reach the product server. Check your internet connection.");
+      do {
+        final page = await _api.get('/v1/products', auth: false, query: {
+          'limit': '200',
+          if (category != null) 'category': category,
+          if (cursor != null) 'cursor': cursor,
+        }) as Map<String, dynamic>;
+        products.addAll((page['items'] as List)
+            .whereType<Map>()
+            .map((p) => ProductModel.fromBackend(Map<String, dynamic>.from(p))));
+        cursor = page['nextCursor'] as String?;
+      } while (cursor != null);
+    } on ApiException catch (e) {
+      throw ProductApiException(e.isNetwork
+          ? "Couldn't reach the shop server. Is the backend running?"
+          : e.message);
     }
-    if (response.statusCode != 200) {
-      throw ProductApiException(
-          'Product server error (${response.statusCode}). Please try again.');
-    }
-    try {
-      return jsonDecode(response.body);
-    } catch (_) {
-      throw ProductApiException(
-          'Received invalid data from the product server.');
-    }
-  }
-
-  /// All products (limit=0 returns the full catalogue, ~200 items).
-  Future<List<ProductModel>> fetchProducts() async {
-    final data = await _get('/products?limit=0');
-    final list = (data is Map ? data['products'] : null) as List? ?? const [];
-    return list
-        .whereType<Map>()
-        .map((p) => ProductModel.fromApi(Map<String, dynamic>.from(p)))
-        .toList();
+    return products;
   }
 
   Future<List<CategoryModel>> fetchCategories() async {
-    final data = await _get('/products/categories');
-    final list = data is List ? data : const [];
-    return list
-        .whereType<Map>()
-        .map((c) => CategoryModel.fromApi(Map<String, dynamic>.from(c)))
-        .toList();
+    try {
+      final data =
+          await _api.get('/v1/categories', auth: false) as Map<String, dynamic>;
+      return (data['items'] as List)
+          .whereType<Map>()
+          .map((c) => CategoryModel.fromApi(Map<String, dynamic>.from(c)))
+          .toList();
+    } on ApiException catch (e) {
+      throw ProductApiException(e.isNetwork
+          ? "Couldn't reach the shop server. Is the backend running?"
+          : e.message);
+    }
   }
 
-  void close() => _client.close();
+  void close() {}
 }

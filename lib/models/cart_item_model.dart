@@ -1,6 +1,7 @@
 import 'package:shop/models/product_model.dart';
 
 class CartItemModel {
+  /// Server line key (`productId|size|color`).
   final String? id;
   final ProductModel product;
   int quantity;
@@ -14,6 +15,26 @@ class CartItemModel {
     this.selectedSize,
     this.selectedColor,
   });
+
+  CartItemModel copyWith({int? quantity}) => CartItemModel(
+        id: id,
+        product: product,
+        quantity: quantity ?? this.quantity,
+        selectedSize: selectedSize,
+        selectedColor: selectedColor,
+      );
+
+  /// A line of `GET /v1/cart`.
+  factory CartItemModel.fromBackend(Map<String, dynamic> json) {
+    return CartItemModel(
+      id: json['lineKey'] as String?,
+      product: ProductModel.fromBackend(
+          Map<String, dynamic>.from(json['product'] as Map? ?? {})),
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      selectedSize: json['selectedSize'] as String?,
+      selectedColor: json['selectedColor'] as String?,
+    );
+  }
 
   factory CartItemModel.fromJson(Map<String, dynamic> json, String docId) {
     return CartItemModel(

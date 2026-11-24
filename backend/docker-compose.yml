@@ -1,0 +1,121 @@
+# Full local stack:  docker compose up --build
+#   http://localhost:8080  API (through nginx, 2 replicas)
+#   http://localhost:8090  mock payment provider
+# Scale out:            docker compose up -d --scale api=4 --scale worker=2
+
+x-app-env: &app-env
+  NODE_ENV: production
+  LOG_LEVEL: info
+  DATABASE_URL: postgres://shop:shop@postgres:5432/shop
+  DATABASE_POOL_MAX: "15"
+  REDIS_URL: redis://redis:6379/0
+  FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-e-commerce-e3c9f}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5000}
+  TRUST_PROXY: "true"
+  PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+  MOCK_PSP_URL: http://psp:8090
+  MOCK_PSP_PUBLIC_URL: http://localhost:8090
+  MOCK_PSP_SECRET_KEY: ${MOCK_PSP_SECRET_KEY:-sk_mock_local_compose}
+  MOCK_PSP_WEBHOOK_SECRET: ${MOCK_PSP_WEBHOOK_SECRET:-whsec_mock_local_compose}
+  STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+  PUBLIC_API_URL: http://localhost:8080
+  # Dev tokens let the load-test script act as thousands of users. Never enable in real production.
+  AUTH_ALLOW_DEV_TOKENS: ${AUTH_ALLOW_DEV_TOKENS:-false}
+  AUTH_DEV_SECRET: ${AUTH_DEV_SECRET:-}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
+      POSTGRES_DB: shop
+    command: ["postgres", "-c", "max_connections=200", "-c", "shared_buffers=256MB"]
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    # AOF with fsync every second: a crash loses at most ~1 s of cart writes.
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory-policy", "noeviction"]
+    ports: ["6379:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # One-shot: migrations, then the catalogue import (first run only).
+  setup:
+    build: .
+    command: ["node", "dist/cli.js", "setup"]
+    environment:
+      <<: *app-env
+      NODE_ENV: development
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: "no"
+
+  api:
+    build: .
+    command: ["node", "dist/server.js"]
+    environment:
+      <<: *app-env
+      NODE_ENV: ${API_NODE_ENV:-production}
+      SERVICE_NAME: api
+    deploy:
+      replicas: 2
+    depends_on:
+      setup: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: ["node", "dist/worker.js"]
+    environment:
+      <<: *app-env
+      NODE_ENV: ${API_NODE_ENV:-production}
+      SERVICE_NAME: worker
+    depends_on:
+      setup: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  psp:
+    build: .
+    command: ["node", "dist/mock-psp/server.js"]
+    environment:
+      PORT: "8090"
+      REDIS_URL: redis://redis:6379/1
+      MOCK_PSP_SECRET_KEY: ${MOCK_PSP_SECRET_KEY:-sk_mock_local_compose}
+      MOCK_PSP_WEBHOOK_SECRET: ${MOCK_PSP_WEBHOOK_SECRET:-whsec_mock_local_compose}
+      MOCK_PSP_WEBHOOK_URL: http://nginx:8080/v1/webhooks/mock
+      MOCK_PSP_CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5000}
+    ports: ["8090:8090"]
+    depends_on:
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    volumes: ["./nginx.conf:/etc/nginx/nginx.conf:ro"]
+    ports: ["8080:8080"]
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
